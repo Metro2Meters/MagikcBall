@@ -1,0 +1,113 @@
+Main:
+public void AddAnswerOption (View v) {
+
+        Intent intent = new Intent(this, AnswerOptions.class);
+        startActivity(intent);
+    }
+
+
+    public void Onclic(){
+
+        AnswerOptions AnswerOptionsActivity = new AnswerOptions();
+
+        AnswerOptionsActivity.randomSet();
+    }
+
+
+
+Second class:
+
+
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.answer_options);
+
+        lvItems = findViewById(R.id.lvItems);
+
+        // Load answers from SharedPreferences
+        answerList = new ArrayList<>();
+        if (answerList.isEmpty()) {
+            answerList.add("Да");
+            answerList.add("Нет");
+            answerList.add("Скорее всего да");
+            answerList.add("Скорее всего нет");
+            answerList.add("Возможно");
+            answerList.add("Имеются перспективы");
+            answerList.add("Вопрос задан неверно");
+            saveAnswers(answerList);
+        }
+
+        // Create ArrayAdapter for the ListView
+        itemsAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, answerList);
+        lvItems.setAdapter(itemsAdapter);
+
+        setupListViewListener();
+    }
+
+
+    public void randomSet() {
+        // Создаем экземпляр Random для генерации случайного числа
+        Random random = new Random();
+
+        // Получаем случайный индекс из списка
+        int randomIndex = random.nextInt(answerList.size());
+
+        // Получаем элемент из списка по случайному индексу
+        String randomAnswer = answerList.get(randomIndex);
+
+        // Устанавливаем текст в textView2
+        if (textView2 != null) {
+            textView2.setText(randomAnswer);
+
+        } else {
+            Log.e("AnswerOptions", "textView2 is null");
+        }
+
+    }
+
+
+    private ArrayList<String> loadAnswers() {
+        SharedPreferences preferences = getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE);
+        Set<String> defaultSet = new HashSet<>(); // Empty set as default
+        Set<String> answerSet = preferences.getStringSet(ANSWER_SET_KEY, defaultSet);
+        return new ArrayList<>(answerSet);
+    }
+
+
+    private void saveAnswers(ArrayList<String> answerList) {
+        SharedPreferences preferences = getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        Set<String> answerSet = new HashSet<>(answerList);
+        editor.putStringSet(ANSWER_SET_KEY, answerSet);
+        editor.apply();
+    }
+
+    public void onAddItem(View v) {
+        EditText etNewItem = findViewById(R.id.etNewItem);
+        String itemText = etNewItem.getText().toString();
+        answerList.add(itemText);
+        etNewItem.setText("");
+
+        // Save the updated list to SharedPreferences
+        saveAnswers(answerList);
+        // Notify the adapter that the dataset has changed
+        itemsAdapter.notifyDataSetChanged();
+    }
+
+
+    private void setupListViewListener() {
+        lvItems.setOnItemLongClickListener(
+                new AdapterView.OnItemLongClickListener() {
+                    @Override
+                    public boolean onItemLongClick(AdapterView<?> adapter, View item, int pos, long id) {
+                        // Remove the item from the list
+                        answerList.remove(pos);
+                        // Save the updated list to SharedPreferences
+                        saveAnswers(answerList);
+                        // Notify the adapter that the dataset has changed
+                        itemsAdapter.notifyDataSetChanged();
+                        // Indicate that the long click is handled
+                        return true;
+                    }
+                });
+    }
